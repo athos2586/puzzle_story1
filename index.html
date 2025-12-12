@@ -105,7 +105,6 @@
 <div class="error-text" id="error-box"></div>
 
 <script>
-    // 主线 + 分支剧情（含返回主线）
     const storyStages = [
         {
             id: "main_0",
@@ -143,10 +142,7 @@
         },
         {
             id: "main_4",
-            text: "你轻声唤出：「艾玛……」\n\n"
-                + "空气凝固，镜子碎裂，地板震动，一扇隐藏的门缓缓打开。\n\n"
-                + "你听见一个清晰的女声：「谢谢你……我终于自由了。」\n\n"
-                + "你踏出庄园，晨雾中，一道微光指引你走出这片被诅咒的土地。",
+            text: "占位符，用于结局阶段，由 JS 根据是否触发分支渲染具体结局。",
             keyword: null,
             next: null
         },
@@ -177,40 +173,58 @@
     ];
 
     let currentStageId = "main_0";
-    let lastMainStageId = "main_0";  // 用于从支线返回主线
+    let lastMainStageId = "main_0";
+    let branchVisited = new Set();
 
     function updateStory() {
         const story = storyStages.find(s => s.id === currentStageId);
         const storyBox = document.getElementById('story-box');
         const errorBox = document.getElementById('error-box');
 
-        if (story) {
-            // 渲染文本
-            storyBox.textContent = story.text;
-            errorBox.textContent = '';
+        if (!story) return;
 
-            // 如果是支线，添加返回按钮
-            if (story.isBranch) {
-                const returnButton = document.createElement('button');
-                returnButton.textContent = "← 返回主线";
-                returnButton.style.marginTop = "20px";
-                returnButton.style.padding = "8px 16px";
-                returnButton.style.backgroundColor = "#555";
-                returnButton.style.color = "#fff";
-                returnButton.style.border = "none";
-                returnButton.style.borderRadius = "5px";
-                returnButton.style.cursor = "pointer";
+        storyBox.innerHTML = ''; // 清空内容
+        errorBox.textContent = '';
 
-                returnButton.onclick = () => {
-                    currentStageId = lastMainStageId;
-                    updateStory();
-                };
+        // 特别处理结局阶段
+        if (currentStageId === "main_4") {
+            const trueEnding = branchVisited.size > 0;
+            storyBox.textContent = trueEnding
+                ? "你轻声唤出：「艾玛……」\n\n"
+                + "镜子碎裂，墙壁轰鸣。艾玛的灵魂缓缓浮现，她的眼神中带着解脱。\n\n"
+                + "你不仅释放了她，还揭露了她真正的死因——她的父亲，将她关进了镜中。\n\n"
+                + "她微笑着向你低语：「谢谢你……现在我终于自由了。」\n\n"
+                + "你踏出庄园，朝阳穿透薄雾，一切归于安宁。"
+                :
+                "你轻声唤出：「艾玛……」\n\n"
+                + "镜子碎裂，门打开，她的灵魂悄然离去。\n\n"
+                + "你成功释放了她，但你仍不知道她为何被困。\n\n"
+                + "你走出庄园，夜雾中，一丝不安在你心头萦绕……";
+            return;
+        }
 
-                // 清空原内容并重新加入文本和按钮
-                storyBox.textContent = story.text;
-                storyBox.appendChild(document.createElement("br"));
-                storyBox.appendChild(returnButton);
-            }
+        // 渲染当前故事
+        storyBox.textContent = story.text;
+
+        // 如果是支线，添加返回主线按钮
+        if (story.isBranch) {
+            const returnBtn = document.createElement('button');
+            returnBtn.textContent = "← 返回主线";
+            Object.assign(returnBtn.style, {
+                marginTop: "20px",
+                padding: "8px 16px",
+                backgroundColor: "#555",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer"
+            });
+            returnBtn.onclick = () => {
+                currentStageId = lastMainStageId;
+                updateStory();
+            };
+            storyBox.appendChild(document.createElement("br"));
+            storyBox.appendChild(returnBtn);
         }
     }
 
@@ -218,7 +232,9 @@
         const input = document.getElementById('keyword-input').value.trim().toLowerCase();
         const stage = storyStages.find(s => s.id === currentStageId);
 
-        // 主线关键词匹配
+        if (!stage) return;
+
+        // 主线推进
         if (stage.keyword && input === stage.keyword.toLowerCase()) {
             lastMainStageId = stage.next || currentStageId;
             currentStageId = stage.next;
@@ -227,16 +243,17 @@
             return;
         }
 
-        // 支线关键词：女仆
+        // 支线分支识别
         if (input === "女仆") {
+            branchVisited.add("女仆");
             lastMainStageId = currentStageId;
             currentStageId = "branch_maid";
             updateStory();
             return;
         }
 
-        // 支线关键词：医生
         if (input === "医生") {
+            branchVisited.add("医生");
             lastMainStageId = currentStageId;
             currentStageId = "branch_doctor";
             updateStory();
@@ -248,6 +265,7 @@
 
     window.onload = updateStory;
 </script>
+
 
 </body>
 </html>
