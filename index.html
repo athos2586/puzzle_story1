@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>🕯️ 被遗忘的庄园</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #1e1e1e;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+            text-align: center;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #c0392b;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .search-bar {
+            width: 300px;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            background-color: #2c2c2c;
+            color: #fff;
+            box-shadow: 0 0 5px #c0392b;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .content-container {
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px 20px;
+        }
+
+        .story-box {
+            max-width: 700px;
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);
+            line-height: 1.8;
+            font-size: 1.2em;
+            white-space: pre-line;
+            border-left: 4px solid #c0392b;
+        }
+
+        .error-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1em;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="title">🕯️ 被遗忘的庄园</div>
+    <div class="search-container">
+        <input type="text" id="keyword-input" class="search-bar" placeholder="请输入关键词，例如：管家">
+        <button class="search-button" onclick="checkKeyword()">搜索</button>
+    </div>
+</div>
+
+<div class="content-container">
+    <div class="story-box" id="story-box">
+        <!-- 初始故事内容将由 JS 注入 -->
+    </div>
+</div>
+
+<div class="error-text" id="error-box"></div>
+
+<script>
+    const storyStages = [
+        {
+            text: "你的汽车在一座废弃庄园附近抛锚。大雨滂沱，你踏上碎石小路，来到庄园门前。\n"
+                + "门缓缓开启。你走了进去，身后大门轰然关闭。\n\n"
+                + "在尘封的桌子上，有一张破碎的纸条：\n\n「管家知道真相。」",
+            keyword: "管家"
+        },
+        {
+            text: "你找到管家的房间，干净得异常。\n"
+                + "一本日记摆在桌上，翻开后只写着：\n\n「要是时钟能停下该多好……」\n\n"
+                + "你顺着提示，来到一座老旧的大钟前，后方竟有一道暗门悄然开启。",
+            keyword: "时钟"
+        },
+        {
+            text: "你走进幽暗的通道，一阵寒风扑面而来。\n"
+                + "墙上写着几个数字：13、7、21。\n"
+                + "黑暗中传来孩童低语：「答案永远是质数。」",
+            keyword: "质数"
+        },
+        {
+            text: "你轻声说出『质数』，墙壁滑开，露出一个金属盒。\n"
+                + "盒中是一枚刻着「E.A.」的项链。\n"
+                + "镜中浮现出一行猩红的字：「她的名字，就是终点。」",
+            keyword: "艾玛"
+        },
+        {
+            text: "你轻声唤道：「艾玛」。\n"
+                + "镜子碎裂，通往外界的门缓缓打开。\n\n"
+                + "门口放着一封信：「谢谢你……你解救了我。」\n\n"
+                + "你踏入夜色，庄园在浓雾中慢慢消失。",
+            keyword: null
+        }
+    ];
+
+    let currentStage = 0;
+
+    function updateStory() {
+        const storyBox = document.getElementById('story-box');
+        storyBox.textContent = storyStages[currentStage].text;
+        document.getElementById('error-box').textContent = '';
+        document.getElementById('keyword-input').value = '';
+    }
+
+    function checkKeyword() {
+        const input = document.getElementById('keyword-input').value.trim().toLowerCase();
+        const expected = storyStages[currentStage].keyword;
+
+        if (!expected) return;
+
+        if (input === expected.toLowerCase()) {
+            currentStage++;
+            updateStory();
+        } else {
+            document.getElementById('error-box').textContent = '❌ 关键词错误，请再试一次...';
+        }
+    }
+
+    // 初始化故事
+    window.onload = updateStory;
+</script>
+
+</body>
+</html>
