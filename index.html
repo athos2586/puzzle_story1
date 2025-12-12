@@ -105,64 +105,147 @@
 <div class="error-text" id="error-box"></div>
 
 <script>
+    // 主线 + 分支剧情（含返回主线）
     const storyStages = [
         {
-            text: "你的汽车在一座废弃庄园附近抛锚。大雨滂沱，你踏上碎石小路，来到庄园门前。\n"
-                + "门缓缓开启。你走了进去，身后大门轰然关闭。\n\n"
-                + "在尘封的桌子上，有一张破碎的纸条：\n\n「管家知道真相。」",
-            keyword: "管家"
+            id: "main_0",
+            text: "你的汽车在一座废弃庄园附近抛锚。你走进门，一阵寒意袭来。\n\n"
+                + "在大厅的桌上，你发现一张泛黄纸条：\n\n「管家知道真相。」",
+            keyword: "管家",
+            next: "main_1"
         },
         {
-            text: "你找到管家的房间，干净得异常。\n"
-                + "一本日记摆在桌上，翻开后只写着：\n\n「要是时钟能停下该多好……」\n\n"
-                + "你顺着提示，来到一座老旧的大钟前，后方竟有一道暗门悄然开启。",
-            keyword: "时钟"
+            id: "main_1",
+            text: "你进入管家伊凡的房间。书桌上有一本被撕破的日记，第一页写着：\n\n"
+                + "「如果那个钟能停下，一切或许就不同了。」\n\n"
+                + "一张旧相片从日记中滑落，上面是一个女孩和一个穿女仆服的人影。\n\n"
+                + "你还可以输入「女仆」查看支线，或继续输入「时钟」。",
+            keyword: "时钟",
+            next: "main_2"
         },
         {
-            text: "你走进幽暗的通道，一阵寒风扑面而来。\n"
-                + "墙上写着几个数字：13、7、21。\n"
-                + "黑暗中传来孩童低语：「答案永远是质数。」",
-            keyword: "质数"
+            id: "main_2",
+            text: "你找到一座巨大的老式时钟，钟摆缓缓摆动，发出沉闷的声响。\n\n"
+                + "在时钟背后，你发现一条幽暗通道。\n"
+                + "墙上写着数字：13、7、21。\n\n"
+                + "黑暗中，耳边响起呢喃：「答案……永远是质数。」\n\n"
+                + "你也可以尝试输入「医生」了解这个家族的病史。",
+            keyword: "质数",
+            next: "main_3"
         },
         {
-            text: "你轻声说出『质数』，墙壁滑开，露出一个金属盒。\n"
-                + "盒中是一枚刻着「Emma」的项链。\n"
-                + "镜中浮现出一行猩红的字：「她的名字，就是终点。」",
-            keyword: "Emma"
+            id: "main_3",
+            text: "通道尽头是一个古老的金属盒，盒中躺着一条项链。\n"
+                + "吊坠上刻着名字：「艾玛」。\n\n"
+                + "镜子中浮现出血红的文字：「她的名字，就是终点。」",
+            keyword: "艾玛",
+            next: "main_4"
         },
         {
-            text: "你轻声唤道：「Emma」。\n"
-                + "镜子碎裂，通往外界的门缓缓打开。\n\n"
-                + "门口放着一封信：「谢谢你……你解救了我。」\n\n"
-                + "你踏入夜色，庄园在浓雾中慢慢消失。",
-            keyword: null
+            id: "main_4",
+            text: "你轻声唤出：「艾玛……」\n\n"
+                + "空气凝固，镜子碎裂，地板震动，一扇隐藏的门缓缓打开。\n\n"
+                + "你听见一个清晰的女声：「谢谢你……我终于自由了。」\n\n"
+                + "你踏出庄园，晨雾中，一道微光指引你走出这片被诅咒的土地。",
+            keyword: null,
+            next: null
+        },
+
+        // 支线：女仆
+        {
+            id: "branch_maid",
+            text: "你打开一扇侧门，进入女仆丽莎的房间。\n\n"
+                + "墙上贴满涂鸦和划痕：\n「我没有害她！不是我！她自己……」\n\n"
+                + "在床下，你找到一本破旧日记：\n\n"
+                + "「艾玛曾经说，她梦见红色的人影站在她床前……是父亲？」",
+            keyword: null,
+            next: null,
+            isBranch: true
+        },
+
+        // 支线：医生
+        {
+            id: "branch_doctor",
+            text: "你找到一间药物存放室，写着：米勒医生专属。\n\n"
+                + "柜子里堆满瓶瓶罐罐，标签上写着「镇静剂」、「记忆抑制」……\n\n"
+                + "你发现一张诊断书：\n「艾玛患有家族遗传精神疾病，病发前常见幻觉……」\n\n"
+                + "结尾的注解写道：\n「不可让她接近时钟与镜子。」",
+            keyword: null,
+            next: null,
+            isBranch: true
         }
     ];
 
-    let currentStage = 0;
+    let currentStageId = "main_0";
+    let lastMainStageId = "main_0";  // 用于从支线返回主线
 
     function updateStory() {
+        const story = storyStages.find(s => s.id === currentStageId);
         const storyBox = document.getElementById('story-box');
-        storyBox.textContent = storyStages[currentStage].text;
-        document.getElementById('error-box').textContent = '';
-        document.getElementById('keyword-input').value = '';
+        const errorBox = document.getElementById('error-box');
+
+        if (story) {
+            // 渲染文本
+            storyBox.textContent = story.text;
+            errorBox.textContent = '';
+
+            // 如果是支线，添加返回按钮
+            if (story.isBranch) {
+                const returnButton = document.createElement('button');
+                returnButton.textContent = "← 返回主线";
+                returnButton.style.marginTop = "20px";
+                returnButton.style.padding = "8px 16px";
+                returnButton.style.backgroundColor = "#555";
+                returnButton.style.color = "#fff";
+                returnButton.style.border = "none";
+                returnButton.style.borderRadius = "5px";
+                returnButton.style.cursor = "pointer";
+
+                returnButton.onclick = () => {
+                    currentStageId = lastMainStageId;
+                    updateStory();
+                };
+
+                // 清空原内容并重新加入文本和按钮
+                storyBox.textContent = story.text;
+                storyBox.appendChild(document.createElement("br"));
+                storyBox.appendChild(returnButton);
+            }
+        }
     }
 
     function checkKeyword() {
         const input = document.getElementById('keyword-input').value.trim().toLowerCase();
-        const expected = storyStages[currentStage].keyword;
+        const stage = storyStages.find(s => s.id === currentStageId);
 
-        if (!expected) return;
-
-        if (input === expected.toLowerCase()) {
-            currentStage++;
+        // 主线关键词匹配
+        if (stage.keyword && input === stage.keyword.toLowerCase()) {
+            lastMainStageId = stage.next || currentStageId;
+            currentStageId = stage.next;
             updateStory();
-        } else {
-            document.getElementById('error-box').textContent = '❌ 关键词错误，请再试一次...';
+            document.getElementById('keyword-input').value = '';
+            return;
         }
+
+        // 支线关键词：女仆
+        if (input === "女仆") {
+            lastMainStageId = currentStageId;
+            currentStageId = "branch_maid";
+            updateStory();
+            return;
+        }
+
+        // 支线关键词：医生
+        if (input === "医生") {
+            lastMainStageId = currentStageId;
+            currentStageId = "branch_doctor";
+            updateStory();
+            return;
+        }
+
+        document.getElementById('error-box').textContent = '❌ 关键词错误，请再试一次...';
     }
 
-    // 初始化故事
     window.onload = updateStory;
 </script>
 
