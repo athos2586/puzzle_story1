@@ -2,16 +2,27 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>🕯️ 被遗忘的庄园</title>
+    <title>寂庙无声 - 解谜互动故事</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Georgia', serif;
+            background-image: url('assets/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            backdrop-filter: blur(5px);
+            color: #e0e0e0;
+            font-family: 'Georgia', serif;
+        }
+
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.75);
+            min-height: 100vh;
+            padding-bottom: 50px;
         }
 
         .header {
@@ -27,7 +38,7 @@
 
         .title {
             font-size: 2.5em;
-            color: #c0392b;
+            color: #e67e22;
             margin-bottom: 10px;
             text-shadow: 1px 1px 2px black;
         }
@@ -47,13 +58,13 @@
             font-size: 1em;
             background-color: #2c2c2c;
             color: #fff;
-            box-shadow: 0 0 5px #c0392b;
+            box-shadow: 0 0 5px #e67e22;
         }
 
         .search-button {
             padding: 10px 20px;
             font-size: 1em;
-            background-color: #c0392b;
+            background-color: #e67e22;
             color: white;
             border: none;
             border-radius: 4px;
@@ -67,15 +78,15 @@
         }
 
         .story-box {
-            max-width: 700px;
+            max-width: 750px;
             background-color: #1a1a1a;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);
+            box-shadow: 0 0 20px rgba(230, 126, 34, 0.4);
             line-height: 1.8;
             font-size: 1.2em;
             white-space: pre-line;
-            border-left: 4px solid #c0392b;
+            border-left: 4px solid #e67e22;
         }
 
         .error-text {
@@ -84,144 +95,162 @@
             font-size: 1em;
             color: #e74c3c;
         }
+
+        .hint-button {
+            margin-top: 20px;
+            background-color: #444;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .return-button {
+            margin-top: 20px;
+            background-color: #555;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <div class="title">🕯️ 被遗忘的庄园</div>
-    <div class="search-container">
-        <input type="text" id="keyword-input" class="search-bar" placeholder="请输入关键词，例如：管家">
-        <button class="search-button" onclick="checkKeyword()">搜索</button>
+<div class="overlay">
+    <div class="header">
+        <div class="title">🕯️ 寂庙无声</div>
+        <div class="search-container">
+            <input type="text" id="keyword-input" class="search-bar" placeholder="请输入关键词，如：禅房">
+            <button class="search-button" onclick="checkKeyword()">确认</button>
+        </div>
     </div>
-</div>
 
-<div class="content-container">
-    <div class="story-box" id="story-box">
-        <!-- 初始故事内容将由 JS 注入 -->
+    <div class="content-container">
+        <div class="story-box" id="story-box"></div>
     </div>
-</div>
 
-<div class="error-text" id="error-box"></div>
+    <div class="error-text" id="error-box"></div>
+</div>
 
 <script>
-    const storyStages = [
+    const stages = [
         {
-            id: "main_0",
-            text: "你的汽车在一座废弃庄园附近抛锚。你走进门，一阵寒意袭来。\n\n"
-                + "在大厅的桌上，你发现一张泛黄纸条：\n\n「管家知道真相。」",
-            keyword: "管家",
-            next: "main_1"
+            id: "intro",
+            text: "你误入江南深山中的一座古庙『云隐寺』。\n山雨欲来，庙门轰然关闭，你被困其中。\n\n香案旁残留的灰烬中，浮现几个字句：\n\n“尘生眼，火净心，欲问彼身往何层？”\n数字：6，12，3，18\n\n地板缝中一柄纸扇，其上写：『坐中无我境』",
+            keyword: "禅房",
+            next: "zen_room",
+            hints: [
+                "‘坐中无我’是佛教术语，指的是某种修行状态。",
+                "数字可能代表笔画数或偏旁……‘禅房’二字都在其中。",
+                "答案是你能修行的地方。"
+            ]
         },
         {
-            id: "main_1",
-            text: "你进入管家伊凡的房间。书桌上有一本被撕破的日记，第一页写着：\n\n"
-                + "「如果那个钟能停下，一切或许就不同了。」\n\n"
-                + "一张旧相片从日记中滑落，上面是一个女孩和一个穿女仆服的人影。\n\n"
-                + "你还可以输入「女仆」查看支线，或继续输入「时钟」。",
-            keyword: "时钟",
-            next: "main_2"
+            id: "zen_room",
+            text: "你来到禅房，屋内一片死寂。\n一幅对联被撕掉一半，只剩：『心中有声不成声』。\n床下破书页上，隐约写着两个字：『无』与『？』。\n\n这二字被反复涂抹，像是某人挣扎着想要发出声音。",
+            keyword: "无声",
+            next: "stone_forest",
+            hints: [
+                "‘有声不成声’，暗示有人说不出话？",
+                "佛门讲‘空’，但这里反复强调‘无法发声’。",
+                "这个词出现在破书中，也可能是这个人的状态。"
+            ]
         },
         {
-            id: "main_2",
-            text: "你找到一座巨大的老式时钟，钟摆缓缓摆动，发出沉闷的声响。\n\n"
-                + "在时钟背后，你发现一条幽暗通道。\n"
-                + "墙上写着数字：13、7、21。\n\n"
-                + "黑暗中，耳边响起呢喃：「答案……永远是质数。」\n\n"
-                + "你也可以尝试输入「医生」了解这个家族的病史。",
-            keyword: "质数",
-            next: "main_3"
+            id: "stone_forest",
+            text: "碑林中，一块石碑的字刻反了。\n你凑近阅读，上面写着：『选经落榜者……永不得言。』\n\n某些字后面似乎被改过，尤其是两个名字 —— 其中之一是：『净〇』。",
+            keyword: "净远",
+            next: "soul_lantern",
+            hints: [
+                "‘选经’是佛门晋升仪式，未被选中的弟子如何？",
+                "净远 = 清净 + 永远？或是名字？",
+                "你可能已见过这个名字的残片。"
+            ]
         },
         {
-            id: "main_3",
-            text: "通道尽头是一个古老的金属盒，盒中躺着一条项链。\n"
-                + "吊坠上刻着名字：「艾玛」。\n\n"
-                + "镜子中浮现出血红的文字：「她的名字，就是终点。」",
-            keyword: "艾玛",
-            next: "main_4"
+            id: "soul_lantern",
+            text: "你来到心灯阁。\n四盏灯以奇怪顺序排列：西、南、北、东。\n正中祭台刻着‘归’与‘寂’两字，但少一字不成咒。\n\n耳边传来低语：「……归？何处归……」",
+            keyword: "归寂",
+            next: "ending",
+            hints: [
+                "‘寂’在佛教中代表涅槃或死亡。",
+                "‘归寂’是安魂仪式。",
+                "这正是你所执行的最后仪式名称。"
+            ]
         },
         {
-            id: "main_4",
-            text: "占位符，用于结局阶段，由 JS 根据是否触发分支渲染具体结局。",
+            id: "ending",
+            text: "ENDING_PLACEHOLDER", // 替换为真实结局
             keyword: null,
             next: null
         },
 
-        // 支线：女仆
+        // 分支：斋堂
         {
-            id: "branch_maid",
-            text: "你打开一扇侧门，进入女仆丽莎的房间。\n\n"
-                + "墙上贴满涂鸦和划痕：\n「我没有害她！不是我！她自己……」\n\n"
-                + "在床下，你找到一本破旧日记：\n\n"
-                + "「艾玛曾经说，她梦见红色的人影站在她床前……是父亲？」",
+            id: "branch_dining",
+            text: "你进入斋堂，一口冷锅上还残留未洗净的米粒。\n角落一本油渍纸本写着：\n「净远又被关禁，不许开口……只因他问了‘为何我不可被选？’」",
             keyword: null,
-            next: null,
             isBranch: true
         },
 
-        // 支线：医生
+        // 分支：方丈
         {
-            id: "branch_doctor",
-            text: "你找到一间药物存放室，写着：米勒医生专属。\n\n"
-                + "柜子里堆满瓶瓶罐罐，标签上写着「镇静剂」、「记忆抑制」……\n\n"
-                + "你发现一张诊断书：\n「艾玛患有家族遗传精神疾病，病发前常见幻觉……」\n\n"
-                + "结尾的注解写道：\n「不可让她接近时钟与镜子。」",
+            id: "branch_master",
+            text: "你走进方丈室，抽屉里有封未寄出的信：\n\n「净远本可成材，奈何规矩不能破。我亦悔矣……」\n\n你意识到这场沉默，是制度制造的杀机。",
             keyword: null,
-            next: null,
             isBranch: true
         }
     ];
 
-    let currentStageId = "main_0";
-    let lastMainStageId = "main_0";
-    let branchVisited = new Set();
+    let currentStage = "intro";
+    let lastMainStage = "intro";
+    let hintIndex = 0;
+    let visitedBranches = new Set();
 
-    function updateStory() {
-        const story = storyStages.find(s => s.id === currentStageId);
-        const storyBox = document.getElementById('story-box');
-        const errorBox = document.getElementById('error-box');
-
-        if (!story) return;
-
-        storyBox.innerHTML = ''; // 清空内容
+    function updateStage() {
+        const stage = stages.find(s => s.id === currentStage);
+        const storyBox = document.getElementById("story-box");
+        const errorBox = document.getElementById("error-box");
         errorBox.textContent = '';
+        storyBox.innerHTML = '';
 
-        // 特别处理结局阶段
-        if (currentStageId === "main_4") {
-            const trueEnding = branchVisited.size > 0;
+        // 判断是否是结局
+        if (currentStage === "ending") {
+            const trueEnding = visitedBranches.size > 0;
             storyBox.textContent = trueEnding
-                ? "你轻声唤出：「艾玛……」\n\n"
-                + "镜子碎裂，墙壁轰鸣。艾玛的灵魂缓缓浮现，她的眼神中带着解脱。\n\n"
-                + "你不仅释放了她，还揭露了她真正的死因——她的父亲，将她关进了镜中。\n\n"
-                + "她微笑着向你低语：「谢谢你……现在我终于自由了。」\n\n"
-                + "你踏出庄园，朝阳穿透薄雾，一切归于安宁。"
-                :
-                "你轻声唤出：「艾玛……」\n\n"
-                + "镜子碎裂，门打开，她的灵魂悄然离去。\n\n"
-                + "你成功释放了她，但你仍不知道她为何被困。\n\n"
-                + "你走出庄园，夜雾中，一丝不安在你心头萦绕……";
+                ? "你轻声念出：归寂。\n\n烛光摇曳，净远的身影浮现。\n\n他终于被听见，也终于被理解。\n\n你看到他嘴角微笑，轻轻低头。\n\n寺庙门缓缓开启，一切归于寂静。"
+                : "你轻声念出：归寂。\n\n烛光熄灭，一个模糊的身影渐行渐远……\n\n你知道你释放了他，但你从未真正理解过他。\n\n门开了，雾中你转身离去，心中仍有沉重。";
             return;
         }
 
-        // 渲染当前故事
-        storyBox.textContent = story.text;
+        storyBox.textContent = stage.text;
 
-        // 如果是支线，添加返回主线按钮
-        if (story.isBranch) {
-            const returnBtn = document.createElement('button');
+        // 渲染提示按钮
+        if (stage.hints) {
+            const hintBtn = document.createElement("button");
+            hintBtn.textContent = "提示";
+            hintBtn.className = "hint-button";
+            hintBtn.onclick = () => {
+                if (hintIndex < stage.hints.length) {
+                    document.getElementById("error-box").textContent = "💡 " + stage.hints[hintIndex++];
+                } else {
+                    document.getElementById("error-box").textContent = "✅ 所有提示已显示。";
+                }
+            };
+            storyBox.appendChild(document.createElement("br"));
+            storyBox.appendChild(hintBtn);
+        }
+
+        // 支线返回按钮
+        if (stage.isBranch) {
+            const returnBtn = document.createElement("button");
             returnBtn.textContent = "← 返回主线";
-            Object.assign(returnBtn.style, {
-                marginTop: "20px",
-                padding: "8px 16px",
-                backgroundColor: "#555",
-                color: "#fff",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer"
-            });
+            returnBtn.className = "return-button";
             returnBtn.onclick = () => {
-                currentStageId = lastMainStageId;
-                updateStory();
+                currentStage = lastMainStage;
+                updateStage();
             };
             storyBox.appendChild(document.createElement("br"));
             storyBox.appendChild(returnBtn);
@@ -229,43 +258,41 @@
     }
 
     function checkKeyword() {
-        const input = document.getElementById('keyword-input').value.trim().toLowerCase();
-        const stage = storyStages.find(s => s.id === currentStageId);
+        const input = document.getElementById("keyword-input").value.trim().toLowerCase();
+        const stage = stages.find(s => s.id === currentStage);
+        document.getElementById("keyword-input").value = '';
+        hintIndex = 0;
 
-        if (!stage) return;
-
-        // 主线推进
+        // 主线关键词
         if (stage.keyword && input === stage.keyword.toLowerCase()) {
-            lastMainStageId = stage.next || currentStageId;
-            currentStageId = stage.next;
-            updateStory();
-            document.getElementById('keyword-input').value = '';
+            lastMainStage = stage.next;
+            currentStage = stage.next;
+            updateStage();
             return;
         }
 
-        // 支线分支识别
-        if (input === "女仆") {
-            branchVisited.add("女仆");
-            lastMainStageId = currentStageId;
-            currentStageId = "branch_maid";
-            updateStory();
+        // 支线关键词
+        if (input === "斋堂") {
+            visitedBranches.add("斋堂");
+            lastMainStage = currentStage;
+            currentStage = "branch_dining";
+            updateStage();
             return;
         }
 
-        if (input === "医生") {
-            branchVisited.add("医生");
-            lastMainStageId = currentStageId;
-            currentStageId = "branch_doctor";
-            updateStory();
+        if (input === "方丈") {
+            visitedBranches.add("方丈");
+            lastMainStage = currentStage;
+            currentStage = "branch_master";
+            updateStage();
             return;
         }
 
-        document.getElementById('error-box').textContent = '❌ 关键词错误，请再试一次...';
+        document.getElementById("error-box").textContent = "❌ 无效关键词，请再试一次或点击提示。";
     }
 
-    window.onload = updateStory;
+    window.onload = updateStage;
 </script>
-
 
 </body>
 </html>
